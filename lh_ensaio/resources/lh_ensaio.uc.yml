@@ -1,0 +1,24 @@
+# Unity Catalog: schemas da arquitetura medalhão e volume de landing.
+# O catálogo lh_ensaio é criado fora do bundle (uma vez, via CLI).
+resources:
+  schemas:
+    bronze:
+      catalog_name: lh_ensaio
+      name: bronze
+      comment: Dados brutos, como chegam das fontes
+    silver:
+      catalog_name: lh_ensaio
+      name: silver
+      comment: Dados limpos e padronizados
+    gold:
+      catalog_name: lh_ensaio
+      name: gold
+      comment: Dados prontos para consumo (métricas, score)
+
+  volumes:
+    landing:
+      catalog_name: lh_ensaio
+      schema_name: ${resources.schemas.bronze.name}
+      name: landing
+      volume_type: MANAGED
+      comment: Arquivos CSV brutos recebidos (landing zone)
