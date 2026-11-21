@@ -1,0 +1,26 @@
+# Data App do Lead Score (AppKit): Visão do Gestor, Fila do Dia, Agente (Genie) e Plataforma.
+resources:
+  apps:
+    lh_ensaio_app:
+      name: lh-ensaio
+      description: "Lead Score: fila do dia, visão do gestor e agente Genie"
+      source_code_path: ../app
+
+      # Sobe o app automaticamente a cada deploy.
+      lifecycle:
+        started: true
+
+      # O agente (Genie) roda com as permissões de quem está usando o app (on-behalf-of).
+      user_api_scopes:
+        - dashboards.genie
+
+      resources:
+        - name: sql-warehouse
+          sql_warehouse:
+            id: ${var.sql_warehouse_id}
+            permission: CAN_USE
+        - name: genie-space
+          genie_space:
+            name: ${var.genie_space_name}
+            space_id: ${var.genie_space_id}
+            permission: CAN_RUN

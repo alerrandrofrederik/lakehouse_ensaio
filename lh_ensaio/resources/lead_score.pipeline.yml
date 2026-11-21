@@ -1,0 +1,13 @@
+# Pipeline medalhão do Lead Score: landing (CSV) -> bronze -> silver -> gold (IA + nota + fila).
+resources:
+  pipelines:
+    lead_score_pipeline:
+      name: lead_score_pipeline
+      catalog: ${var.catalog}
+      schema: bronze
+      serverless: true
+      continuous: false
+      photon: true
+      libraries:
+        - glob:
+            include: ../src/pipeline/**

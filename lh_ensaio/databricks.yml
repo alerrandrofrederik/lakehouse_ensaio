@@ -18,6 +18,15 @@ variables:
     description: The catalog to use
   schema:
     description: The schema to use
+  sql_warehouse_id:
+    description: SQL Warehouse usado pelo app (analytics) e pelo Genie
+    default: a50e6a998ebe9440
+  genie_space_id:
+    description: Genie Space do agente comercial (definição em genie/lead_score_space.json)
+    default: 01f1e5a3e02a1da0bc137a2fe41a0b2f
+  genie_space_name:
+    description: Nome do Genie Space
+    default: "LH Ensaio · Lead Score"
 
 targets:
   dev:

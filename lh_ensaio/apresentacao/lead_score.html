@@ -1,0 +1,1606 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lead Score · ao vivo</title>
+<meta name="description" content="Roteiro da apresentação ao vivo do case Lead Score: do problema de negócio à fila do dia com IA no Databricks.">
+<style>
+  /* ============================================================
+     Visual na linha da Jornada de Dados
+     Primárias:  Ice White #F5F6FC · Data Blue #0059DB
+                 Midnight  #14141A · Cool Blue #22C2F4
+     Secundárias: Cyan #467CF6 · Tech Blue #62CFFC
+                  Phantom #1E1E24 · Graphite #6E7180
+     Acento Databricks: Lava #FF3621
+     ============================================================ */
+  :root {
+    --ice: #f5f6fc; --data-blue: #0059db; --midnight: #14141a; --cool-blue: #22c2f4;
+    --cyan: #467cf6; --tech-blue: #62cffc; --phantom: #1e1e24; --graphite: #6e7180;
+    --db-lava: #ff3621; --db-lava-2: #ff5f46; --db-lava-3: #ff9682; --db-wine: #98102a; --db-navy: #1b3139;
+
+    --paper: var(--ice); --surface: #ffffff; --surface-2: #eaecf6;
+    --ink: var(--midnight); --ink-soft: #33353f; --muted: #545768;
+    --line: #d9dcea; --line-soft: #e6e8f4;
+    --accent: var(--db-lava); --accent-ink: #ffffff; --accent-2: var(--db-wine); --accent-wash: #ffece8;
+    --blue: var(--data-blue); --blue-wash: #e6eefc;
+    --code-bg: var(--db-navy); --code-ink: #eef3f4; --code-line: #2c4550; --code-name: #93a8b0;
+    --ok: #0f7a52; --ok-wash: #e3f4ec; --warn: #9a5b00; --warn-wash: #fff3dc;
+    --l-bronze: var(--db-wine); --l-silver: var(--db-lava); --l-gold: var(--db-lava-2);
+
+    --display: "Fractul", "Poppins", "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+    --body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --medida: 43rem; --rail: 16rem; --r-lg: 20px; --r-md: 14px; --r-sm: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: var(--midnight); --surface: var(--phantom); --surface-2: #26262e;
+      --ink: var(--ice); --ink-soft: #c9cbd8; --muted: #a7aab8; --line: #2e2e38; --line-soft: #26262e;
+      --accent: var(--db-lava-2); --accent-ink: #14100f; --accent-2: var(--db-lava-3); --accent-wash: #2b1b18;
+      --blue: var(--tech-blue); --blue-wash: #18233a;
+      --code-bg: #0e0e13; --code-ink: #e6e8f2; --code-line: #2a2a34; --code-name: #8f93a6;
+      --ok: #4fc48f; --ok-wash: #16281f; --warn: #f0b04a; --warn-wash: #2b2312;
+      --l-bronze: var(--db-lava-3); --l-silver: var(--db-lava-2); --l-gold: var(--db-lava);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: var(--midnight); --surface: var(--phantom); --surface-2: #26262e;
+    --ink: var(--ice); --ink-soft: #c9cbd8; --muted: #a7aab8; --line: #2e2e38; --line-soft: #26262e;
+    --accent: var(--db-lava-2); --accent-ink: #14100f; --accent-2: var(--db-lava-3); --accent-wash: #2b1b18;
+    --blue: var(--tech-blue); --blue-wash: #18233a;
+    --code-bg: #0e0e13; --code-ink: #e6e8f2; --code-line: #2a2a34; --code-name: #8f93a6;
+    --ok: #4fc48f; --ok-wash: #16281f; --warn: #f0b04a; --warn-wash: #2b2312;
+    --l-bronze: var(--db-lava-3); --l-silver: var(--db-lava-2); --l-gold: var(--db-lava);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.7;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  a { color: var(--blue); }
+  code { font-family: var(--mono); font-size: .88em; background: var(--surface-2); padding: .08em .35em; border-radius: 6px; }
+  strong { color: var(--ink); }
+
+  /* ---------- shell ---------- */
+  .shell { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); gap: 3.5rem; max-width: 80rem; margin: 0 auto; padding: 0 1.75rem 5rem; }
+
+  /* ---------- trilho ---------- */
+  .rail { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 2rem 0; display: flex; flex-direction: column; gap: 1.3rem; }
+  .marca { display: flex; align-items: center; gap: .7rem; }
+  .marca svg { width: 34px; height: 34px; flex: none; }
+  .marca-nome { font-family: var(--display); font-weight: 700; font-size: .92rem; line-height: 1.1; letter-spacing: -.01em; }
+  .marca-tag { display: block; font-family: var(--body); font-weight: 400; font-size: .66rem; color: var(--muted); margin-top: .1rem; }
+  .rail-head { display: flex; flex-direction: column; gap: .55rem; }
+  .rail-title { font-family: var(--mono); font-size: .64rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+  .progress-track { height: 4px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
+  .progress-count { font-family: var(--mono); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .timer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: .5rem .7rem; }
+  .timer-v { font-family: var(--mono); font-size: .95rem; font-variant-numeric: tabular-nums; }
+  .timer-v small { color: var(--muted); font-size: .7rem; }
+  .timer.estourou .timer-v { color: var(--accent); }
+  .timer-btns { display: flex; gap: .3rem; }
+
+  .rail-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); }
+  .rail-list a { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr) auto; gap: .3rem; align-items: baseline; padding: .3rem 0 .3rem .85rem; margin-left: -1px; border-left: 2px solid transparent; color: var(--ink-soft); text-decoration: none; font-size: .8rem; line-height: 1.35; }
+  .rail-list a:hover { color: var(--ink); border-left-color: var(--line); }
+  .rail-list a.active { color: var(--ink); border-left-color: var(--accent); font-weight: 600; }
+  .rail-list a.done .rail-num { color: var(--ok); }
+  .rail-list a.done .rail-num::after { content: "✓"; }
+  .rail-list a.done .rail-num span { display: none; }
+  .rail-num { font-family: var(--mono); font-size: .68rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rail-t { font-family: var(--mono); font-size: .6rem; color: var(--muted); }
+  .rail-list a.agora .rail-t { color: var(--accent-ink); background: var(--accent); border-radius: 99px; padding: 0 .4rem; }
+  .rail-foot { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .atalhos { font-family: var(--mono); font-size: .62rem; color: var(--muted); line-height: 1.6; }
+  .atalhos kbd { border: 1px solid var(--line); border-radius: 4px; padding: 0 .3rem; background: var(--surface); }
+
+  .ghost-btn { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 99px; padding: .3rem .7rem; cursor: pointer; }
+  .ghost-btn:hover, .ghost-btn[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); }
+  .ghost-btn:focus-visible, .copy:focus-visible, .feito:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- conteúdo ---------- */
+  main { padding-top: 2rem; min-width: 0; }
+  .hero { position: relative; overflow: hidden; background: var(--surface); border-radius: var(--r-lg); padding: 2.75rem 2.5rem 2.25rem; margin-bottom: 1rem; }
+  .hero-grafismo { position: absolute; top: -10%; right: -4%; width: 22rem; height: 22rem; opacity: .14; pointer-events: none; }
+  .hero-conteudo { position: relative; }
+  .eyebrow { display: inline-block; font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin: 0 0 .9rem; }
+  h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 4.2vw, 3.1rem); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 1rem; max-width: 22ch; }
+  h1 .destaque { color: var(--blue); }
+  .lede { font-size: 1.08rem; color: var(--ink-soft); max-width: var(--medida); margin: 0 0 1.6rem; }
+  .hero-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .8rem; margin-bottom: 1.4rem; }
+  .meta-item { background: var(--surface-2); border-radius: var(--r-sm); padding: .65rem .85rem; display: flex; flex-direction: column; }
+  .meta-k { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .meta-v { font-weight: 600; font-size: .92rem; line-height: 1.35; }
+  .recursos { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .recursos a { display: inline-flex; align-items: center; gap: .45rem; font-size: .85rem; font-weight: 600; color: var(--ink); text-decoration: none; border: 1px solid var(--line); border-radius: 99px; padding: .45rem .95rem; background: var(--surface); }
+  .recursos a:hover { border-color: var(--accent); }
+  .recursos svg { width: 16px; height: 16px; }
+
+  .bloco { background: var(--surface); border-radius: var(--r-lg); padding: 2.4rem 2.5rem 1.8rem; margin-top: 1rem; scroll-margin-top: 1rem; }
+  .bloco > p, .bloco > ul, .bloco > ol { max-width: var(--medida); }
+  .bloco-head { margin-bottom: 1.2rem; }
+  .bloco-topo { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-bottom: .35rem; }
+  .bloco-num { font-family: var(--mono); font-size: .78rem; color: var(--accent); letter-spacing: .08em; }
+  .tempo { font-family: var(--mono); font-size: .66rem; letter-spacing: .08em; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: .1rem .55rem; }
+  .tipo { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; border-radius: 99px; padding: .12rem .55rem; background: var(--blue-wash); color: var(--blue); }
+  .tipo.demo { background: var(--accent-wash); color: var(--accent); }
+  h2 { font-family: var(--display); font-size: clamp(1.45rem, 2.6vw, 1.9rem); line-height: 1.15; letter-spacing: -.02em; margin: 0; }
+  .bloco-goal { color: var(--muted); margin: .35rem 0 0; font-size: .98rem; }
+  h3 { font-family: var(--display); font-size: 1.1rem; margin: 1.8rem 0 .6rem; letter-spacing: -.01em; }
+  h4 { font-family: var(--display); margin: 0 0 .3rem; font-size: 1rem; }
+
+  /* fala do apresentador */
+  .fala { border: 1px dashed var(--blue); background: var(--blue-wash); border-radius: var(--r-md); padding: 1rem 1.2rem; margin: 1.4rem 0; max-width: var(--medida); }
+  .fala-k { font-family: var(--mono); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--blue); display: block; margin-bottom: .3rem; }
+  .fala p { margin: .2rem 0; }
+  .fala ul { margin: .3rem 0; padding-left: 1.2rem; }
+  body.sem-notas .fala { display: none; }
+
+  /* notas */
+  .nota { border-left: 3px solid var(--line); background: var(--surface-2); border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: .85rem 1.1rem; margin: 1.2rem 0; max-width: var(--medida); }
+  .nota p { margin: .2rem 0; }
+  .nota-k { font-weight: 700; display: block; margin-bottom: .15rem; }
+  .nota.destaque { border-left-color: var(--accent); background: var(--accent-wash); }
+  .nota.alerta { border-left-color: var(--warn); background: var(--warn-wash); }
+  .nota.alerta .nota-k { color: var(--warn); }
+  .nota.ok { border-left-color: var(--ok); background: var(--ok-wash); }
+
+  /* números grandes */
+  .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .8rem; margin: 1.4rem 0; }
+  .numero { background: var(--surface-2); border-radius: var(--r-md); padding: 1rem 1.1rem; }
+  .numero b { display: block; font-family: var(--display); font-size: 2.2rem; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .numero span { font-size: .85rem; color: var(--muted); }
+  .numero.quente b { color: var(--accent); }
+  .numero.azul b { color: var(--blue); }
+
+  .frase { font-family: var(--display); font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.25; letter-spacing: -.015em; border-left: 4px solid var(--accent); padding: .2rem 0 .2rem 1.1rem; margin: 1.6rem 0; max-width: 32ch; }
+
+  /* tabelas */
+  .tabela-wrap { overflow-x: auto; margin: 1.2rem 0; border: 1px solid var(--line); border-radius: var(--r-md); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  th, td { text-align: left; padding: .6rem .85rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  .st { font-family: var(--mono); font-size: .7rem; border-radius: 99px; padding: .1rem .5rem; white-space: nowrap; }
+  .st.ok { background: var(--ok-wash); color: var(--ok); }
+  .st.pend { background: var(--warn-wash); color: var(--warn); }
+
+  /* código */
+  .code { background: var(--code-bg); color: var(--code-ink); border-radius: var(--r-md); margin: 1.1rem 0; overflow: hidden; }
+  .code-head { display: flex; align-items: center; justify-content: space-between; padding: .45rem .55rem .45rem 1rem; border-bottom: 1px solid var(--code-line); }
+  .code-tag { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; color: var(--code-name); }
+  .copy { font-family: var(--mono); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--code-ink); background: transparent; border: 1px solid var(--code-line); border-radius: 99px; padding: .25rem .7rem; cursor: pointer; }
+  .copy:hover { border-color: var(--db-lava-2); }
+  .copy.ok { color: #4fc48f; border-color: #4fc48f; }
+  .code pre { margin: 0; padding: 1rem 1.1rem; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.6; }
+  .code pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .code .res { display: block; color: var(--code-name); }
+
+  /* prompt recolhível */
+  details.prompt { border: 1px solid var(--line); border-radius: var(--r-md); margin: 1.1rem 0; background: var(--surface); }
+  details.prompt summary { cursor: pointer; padding: .75rem 1rem; font-weight: 600; font-size: .92rem; list-style: none; display: flex; align-items: center; gap: .6rem; }
+  details.prompt summary::-webkit-details-marker { display: none; }
+  details.prompt summary::before { content: "▸"; color: var(--accent); transition: transform .2s; }
+  details.prompt[open] summary::before { transform: rotate(90deg); }
+  details.prompt summary small { font-family: var(--mono); font-weight: 400; font-size: .66rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-left: auto; }
+  details.prompt .code { margin: 0 .8rem .8rem; }
+
+  /* diagrama de fluxo */
+  .fluxo { display: flex; flex-wrap: wrap; align-items: stretch; gap: .45rem; margin: 1.5rem 0 .6rem; }
+  .no { flex: 1 1 8.5rem; background: var(--surface-2); border-radius: var(--r-sm); padding: .7rem .8rem; border-top: 3px solid var(--blue); min-width: 0; }
+  .no b { display: block; font-family: var(--display); font-size: .92rem; }
+  .no small { display: block; color: var(--muted); font-size: .74rem; line-height: 1.35; }
+  .no.bronze { border-top-color: var(--l-bronze); } .no.silver { border-top-color: var(--l-silver); } .no.gold { border-top-color: var(--l-gold); }
+  .no.uso { border-top-color: var(--cool-blue); }
+  .seta { align-self: center; color: var(--muted); font-family: var(--mono); }
+  figcaption { font-size: .84rem; color: var(--muted); max-width: var(--medida); }
+
+  /* camadas */
+  .camadas { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .8rem; margin: 1.2rem 0; }
+  .camada { background: var(--surface-2); border-radius: var(--r-md); padding: 1rem 1.1rem; border-top: 3px solid var(--line); }
+  .camada p { margin: .2rem 0 0; font-size: .9rem; color: var(--ink-soft); }
+  .c-bronze { border-top-color: var(--l-bronze); } .c-silver { border-top-color: var(--l-silver); } .c-gold { border-top-color: var(--l-gold); } .c-uso { border-top-color: var(--cool-blue); }
+
+  /* passos e checklist */
+  .ui-lista { counter-reset: passo; list-style: none; padding: 0; margin: 1rem 0; max-width: var(--medida); }
+  .ui-lista li { counter-increment: passo; position: relative; padding: .45rem 0 .45rem 2.4rem; border-bottom: 1px dashed var(--line-soft); }
+  .ui-lista li:last-child { border-bottom: 0; }
+  .ui-lista li::before { content: counter(passo); position: absolute; left: 0; top: .5rem; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-family: var(--mono); font-size: .72rem; display: flex; align-items: center; justify-content: center; }
+  .ui-caminho { font-family: var(--mono); font-size: .8rem; background: var(--surface-2); padding: .08em .4em; border-radius: 6px; }
+  .rotulo { font-family: var(--mono); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 1.6rem 0 .2rem; }
+  .aceite { list-style: none; padding: 0; margin: .6rem 0; max-width: var(--medida); }
+  .aceite li { padding: .3rem 0 .3rem 1.7rem; position: relative; }
+  .aceite li::before { content: "☐"; position: absolute; left: 0; color: var(--ok); }
+  .aceite.feitos li::before { content: "✓"; font-weight: 700; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem; margin: 1.2rem 0; }
+  .card { border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem 1.1rem; }
+  .card p { margin: .25rem 0 0; font-size: .9rem; color: var(--ink-soft); }
+  .card .tag { font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+
+  .formula { font-family: var(--mono); font-size: clamp(.82rem, 1.6vw, 1rem); background: var(--code-bg); color: var(--code-ink); border-radius: var(--r-md); padding: 1rem 1.2rem; margin: 1.2rem 0; overflow-x: auto; }
+  .formula b { color: var(--db-lava-2); }
+
+  .feito { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.6rem; font-family: var(--mono); font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 99px; padding: .45rem 1rem; cursor: pointer; }
+  .feito .box { width: .95rem; height: .95rem; border: 1.5px solid currentColor; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: .7rem; }
+  .feito:hover { color: var(--ink); border-color: var(--accent); }
+  .feito[aria-pressed="true"] { color: var(--ok); border-color: var(--ok); }
+  .feito[aria-pressed="true"] .box::after { content: "✓"; }
+
+  footer.rodape { margin-top: 2rem; font-size: .8rem; color: var(--muted); font-family: var(--mono); letter-spacing: .04em; }
+
+  /* ---------- responsivo ---------- */
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 1rem 4rem; }
+    .rail { position: static; max-height: none; padding: 1.2rem 0 .4rem; }
+    .rail-list { flex-direction: row; flex-wrap: wrap; gap: .3rem; border-left: 0; }
+    .rail-list a { display: inline-flex; gap: .35rem; border: 1px solid var(--line); border-radius: 99px; padding: .2rem .6rem; margin: 0; }
+    .rail-list a .rail-t, .rail-list a .rail-label { display: none; }
+    .rail-list a.active { border-color: var(--accent); }
+    .atalhos { display: none; }
+    .hero, .bloco { padding: 1.6rem 1.25rem 1.4rem; }
+    .hero-grafismo { width: 14rem; height: 14rem; }
+    .seta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Blocos da apresentação">
+    <div class="marca">
+      <!-- Símbolo próprio do Lead Score: funil de 300 para 20 -->
+      <svg viewBox="0 0 120 120" role="img" aria-label="Lead Score">
+        <path d="M14 22 H106 L86 50 H34 Z" fill="#0059db"/>
+        <path d="M38 56 H82 L70 76 H50 Z" fill="#467cf6"/>
+        <path d="M52 82 H68 V104 L52 96 Z" fill="#22c2f4"/>
+      </svg>
+      <span class="marca-nome">Alerrandro
+        <span class="marca-tag">Jornada de Dados · workshop ao vivo</span>
+      </span>
+    </div>
+
+    <div class="rail-head">
+      <span class="rail-title">Lead Score · ao vivo</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="progress-count" id="progressCount">0 de 0 blocos</span>
+    </div>
+
+    <div class="timer" id="timer" aria-live="off">
+      <span class="timer-v"><span id="timerV">00:00</span> <small>/ 50:00</small></span>
+      <span class="timer-btns">
+        <button class="ghost-btn" id="timerBtn" type="button" aria-pressed="false">iniciar</button>
+        <button class="ghost-btn" id="timerReset" type="button" aria-label="Zerar cronômetro">↺</button>
+      </span>
+    </div>
+
+    <ol class="rail-list" id="railList"></ol>
+
+    <div class="rail-foot">
+      <button class="ghost-btn" id="themeBtn" type="button">tema</button>
+      <button class="ghost-btn" id="notasBtn" type="button" aria-pressed="true">notas</button>
+      <button class="ghost-btn" id="resetBtn" type="button">zerar</button>
+    </div>
+    <p class="atalhos">
+      <kbd>j</kbd>/<kbd>k</kbd> próximo · anterior<br>
+      <kbd>n</kbd> notas · <kbd>t</kbd> cronômetro · <kbd>f</kbd> feito
+    </p>
+  </nav>
+
+  <main>
+
+    <header class="hero">
+      <svg class="hero-grafismo" viewBox="0 0 200 200" aria-hidden="true">
+        <path d="M10 30 H190 L150 86 H50 Z" fill="#0059db"/>
+        <path d="M58 96 H142 L118 136 H82 Z" fill="#467cf6"/>
+        <path d="M88 146 H112 V188 L88 176 Z" fill="#22c2f4"/>
+      </svg>
+      <div class="hero-conteudo">
+        <p class="eyebrow">Jornada de Dados · case ao vivo</p>
+        <h1>300 leads por dia, capacidade para 20. <span class="destaque">Quais&nbsp;20?</span></h1>
+        <p class="lede">
+          O roteiro desta apresentação: do problema de negócio da Atlas Software à <strong>Fila do Dia</strong>
+          no ar. São três arquivos CSV, um pipeline medalhão no Databricks, IA direto no SQL
+          (<code>ai_classify</code> e <code>ai_extract</code>), uma nota de prioridade explicável, um agente Genie
+          e um Data App. Cada bloco tem o tempo previsto, a fala, o que mostrar e o comando pronto para copiar.
+        </p>
+        <div class="hero-meta">
+          <div class="meta-item"><span class="meta-k">Duração</span><span class="meta-v">~50 min</span></div>
+          <div class="meta-item"><span class="meta-k">Ambiente</span><span class="meta-v">Databricks serverless · catálogo <code>lh_ensaio</code></span></div>
+          <div class="meta-item"><span class="meta-k">Stack</span><span class="meta-v">Lakeflow · AI Functions · Genie · Apps</span></div>
+          <div class="meta-item"><span class="meta-k">Entregável</span><span class="meta-v">Fila do Dia + agente no ar</span></div>
+        </div>
+        <div class="recursos" aria-label="Recursos">
+          <a href="https://lh-ensaio-1835011522269435.aws.databricksapps.com" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+            Data App publicado
+          </a>
+          <a href="https://github.com/alerrandrofrederik/lakehouse_ensaio" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+            Código do projeto
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ 0.0 ============ -->
+    <section class="bloco" id="b00" data-titulo="O problema" data-inicio="0" data-fim="5">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">0.0</span><span class="tempo">⏱ 0–5 min</span><span class="tipo">negócio</span></div>
+        <h2>O problema.</h2>
+        <p class="bloco-goal">Abrir com a conta que ninguém consegue ignorar.</p>
+      </div>
+
+      <p>
+        A <strong>Atlas Software</strong> (empresa fictícia de software B2B) vende cinco produtos por assinatura.
+        O marketing funciona: chegam cerca de <strong>300 leads por dia</strong>. O time comercial tem
+        <strong>4 vendedores</strong> e cada um faz umas <strong>5 conversas de qualidade</strong> por dia.
+      </p>
+
+      <div class="numeros">
+        <div class="numero azul"><b>300</b><span>leads chegam por dia</span></div>
+        <div class="numero"><b>20</b><span>são atendidos · 6,7%</span></div>
+        <div class="numero quente"><b>280</b><span>ficam sem contato · 93,3%</span></div>
+      </div>
+
+      <p class="frase">Se só posso falar com 20, como garanto que são os 20 certos?</p>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Linha de base (hoje)</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><td>Critério de escolha</td><td>Ordem de chegada / intuição</td></tr>
+            <tr><td>Tempo triando mensagens</td><td>~1 h por vendedor por dia</td></tr>
+            <tr><td>Conversão dos leads contatados</td><td>~3%</td></tr>
+            <tr><td>Vendas por dia (20 × 3%)</td><td><strong>~0,6</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“O time nunca vai falar com todo mundo. Contratar 14 vezes mais vendedores não é opção. A pergunta deixa de ser <em>como atender todos</em> e vira <em>quais 20</em>.”</p>
+        <p>Pergunte à turma: <strong>como vocês escolheriam os 20 hoje?</strong> Quase sempre a resposta é “os primeiros que chegaram”.</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 0.1 ============ -->
+    <section class="bloco" id="b01" data-titulo="Por que hoje dá errado" data-inicio="5" data-fim="10">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">0.1</span><span class="tempo">⏱ 5–10 min</span><span class="tipo">negócio</span></div>
+        <h2>Por que hoje dá errado.</h2>
+        <p class="bloco-goal">Chegar à causa-raiz em cinco perguntas.</p>
+      </div>
+
+      <ol class="ui-lista">
+        <li><strong>Por que vendemos pouco?</strong> Porque boa parte dos 20 contatos do dia não ia comprar.</li>
+        <li><strong>Por que escolhemos os leads errados?</strong> Porque a escolha é por ordem de chegada.</li>
+        <li><strong>Por que por ordem de chegada?</strong> Porque não existe critério de prioridade.</li>
+        <li><strong>Por que não existe critério?</strong> Porque o sinal de intenção está <strong>escondido em texto livre</strong> e espalhado em arquivos diferentes (lead, empresa, histórico).</li>
+        <li><strong>Por que ninguém usa esse sinal?</strong> Porque ler 300 mensagens por dia não escala para humanos.</li>
+      </ol>
+
+      <div class="nota destaque">
+        <span class="nota-k">Causa-raiz</span>
+        <p>O sinal de compra existe, mas está em texto não estruturado e em fontes separadas. Falta um pipeline que <strong>una os dados e transforme texto em atributo</strong>.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card"><span class="tag">o sinal</span><h4>“Preciso de 200 licenças até dezembro”</h4><p>Está na mensagem. Nenhum sistema lê isso hoje.</p></div>
+        <div class="card"><span class="tag">o contexto</span><h4>Empresa grande, já é cliente</h4><p>Está em outra base (cadastro e CRM), separada do lead.</p></div>
+        <div class="card"><span class="tag">o ruído</span><h4>Spam e pedidos de suporte</h4><p>Disputam a atenção do vendedor com quem quer comprar.</p></div>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“O problema não é falta de dado. O dado está lá: na mensagem, no cadastro, no CRM. O problema é que ele está em formato que gente não consegue processar 300 vezes por dia.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 0.2 ============ -->
+    <section class="bloco" id="b02" data-titulo="O tamanho do prêmio" data-inicio="10" data-fim="13">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">0.2</span><span class="tempo">⏱ 10–13 min</span><span class="tipo">negócio</span></div>
+        <h2>O tamanho do prêmio.</h2>
+        <p class="bloco-goal">Mesmo time, mesma verba: o ganho vem só de escolher melhor.</p>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Cenário</th><th>Contatos/dia</th><th>Conversão</th><th>Vendas/dia</th><th>Vendas/mês (22 dias)</th></tr></thead>
+          <tbody>
+            <tr><td>Hoje (ordem de chegada)</td><td class="num">20</td><td class="num">3%</td><td class="num">0,6</td><td class="num">~13</td></tr>
+            <tr><td><strong>Com priorização (meta)</strong></td><td class="num">20</td><td class="num"><strong>12%</strong></td><td class="num"><strong>2,4</strong></td><td class="num"><strong>~53</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="numeros">
+        <div class="numero quente"><b>4×</b><span>mais vendas, sem contratar</span></div>
+        <div class="numero"><b>~1 h</b><span>de triagem por vendedor que vira ~0</span></div>
+      </div>
+
+      <div class="nota alerta">
+        <span class="nota-k">Seja honesto aqui</span>
+        <p>Os números são do cenário fictício. A meta de 12% precisa ser validada no backtest, que ainda depende do histórico com desfecho (bloco 6.0).</p>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“Não é um projeto de tecnologia, é um projeto de <strong>alocação de atenção</strong>. A tecnologia é o meio para os 20 contatos irem para quem tem mais chance de comprar.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 1.0 · preparação do repositório ============ -->
+    <section class="bloco" id="s10" data-titulo="Ferramentas de base" data-inicio="13" data-fim="14">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">1.0</span><span class="tempo">⏱ 13–14 min</span><span class="tipo">setup</span></div>
+        <h2>Ferramentas de base.</h2>
+        <p class="bloco-goal">Quatro binários instalados e respondendo antes de qualquer outra coisa.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">verificação · os quatro devem responder</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks --version
+uv --version
+gh --version
+claude --version</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Ferramenta</th><th>Papel neste projeto</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Databricks CLI</strong></td><td>Autenticação, bundle (deploy do pipeline, volumes e app), SQL pelo terminal</td></tr>
+            <tr><td><strong>uv</strong></td><td>Python 3.12, ambiente virtual e o wheel do bundle (<code>uv build</code>)</td></tr>
+            <tr><td><strong>GitHub CLI</strong></td><td>Criar o repositório e publicar cada etapa</td></tr>
+            <tr><td><strong>Claude Code</strong></td><td>O agente que escreve pipeline, Genie e app com as skills oficiais</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Se algum não responder, instale só o que faltar:</p>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">macOS · terminal</span><button class="copy" type="button">copiar</button></div>
+        <pre><code># Databricks CLI
+brew tap databricks/tap
+brew install databricks
+# uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# GitHub CLI
+brew install gh
+gh auth login
+# Claude Code
+curl -fsSL https://claude.ai/install.sh | bash</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">Windows · PowerShell</span><button class="copy" type="button">copiar</button></div>
+        <pre><code># Databricks CLI
+winget install Databricks.DatabricksCLI
+# uv
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# GitHub CLI
+winget install GitHub.cli
+gh auth login
+# Claude Code
+irm https://claude.ai/install.ps1 | iex</code></pre>
+      </div>
+
+      <div class="nota alerta">
+        <span class="nota-k">Atualizar a CLI do Databricks</span>
+        <p>É <code>brew upgrade databricks</code> (macOS) ou <code>winget upgrade Databricks.DatabricksCLI</code> (Windows). <code>databricks update</code> não existe. Este projeto rodou na CLI <strong>v1.27</strong>.</p>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“As quatro ferramentas aqui são meio, não assunto. Se a turma não for montar junto, mostre os quatro <code>--version</code> respondendo e siga.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 1.1 ============ -->
+    <section class="bloco" id="s11" data-titulo="Autenticar no Databricks" data-inicio="14" data-fim="15">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">1.1</span><span class="tempo">⏱ 14–15 min</span><span class="tipo">setup</span></div>
+        <h2>Autenticar no Databricks.</h2>
+        <p class="bloco-goal">Um perfil com nome, validado por uma chamada real de API.</p>
+      </div>
+
+      <p>O host é a URL do workspace no navegador (<code>https://dbc-xxxxxxxx-xxxx.cloud.databricks.com</code>). Quando a CLI pedir o nome do perfil, use <strong><code>lead_score</code></strong>, não <code>DEFAULT</code>.</p>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · troque pelo seu host</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks auth login --host https://SEU-WORKSPACE.cloud.databricks.com --profile lead_score</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · conferir</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks auth profiles
+databricks current-user me --profile lead_score</code></pre>
+      </div>
+
+      <div class="nota destaque">
+        <span class="nota-k">Por que um perfil com nome</span>
+        <p>Nesta máquina existem três perfis (<code>DEFAULT</code>, <code>pessoal</code>, <code>lead_score</code>). Passar <code>--profile lead_score</code> em todo comando é o que impede um deploy no workspace errado. E <code>current-user me</code> faz uma chamada de verdade, não só lê o arquivo <code>~/.databrickscfg</code>.</p>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 1.2 ============ -->
+    <section class="bloco" id="s12" data-titulo="Repositório no GitHub" data-inicio="15" data-fim="16">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">1.2</span><span class="tempo">⏱ 15–16 min</span><span class="tipo">setup</span></div>
+        <h2>Repositório no GitHub.</h2>
+        <p class="bloco-goal">Primeiro o repositório, depois a pasta, e só então o bundle.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · wizard interativo</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>gh repo create</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Pergunta</th><th>Resposta</th></tr></thead>
+          <tbody>
+            <tr><td>What would you like to do?</td><td>Create a new repository on GitHub from scratch</td></tr>
+            <tr><td>Repository name</td><td><code>lakehouse_ensaio</code></td></tr>
+            <tr><td>Description</td><td>Lead Score no Databricks: medalhão, IA no SQL, Genie e Data App para priorizar os 20 leads do dia.</td></tr>
+            <tr><td>Visibility</td><td>Public ou Private</td></tr>
+            <tr><td>Clone locally?</td><td>Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>cd lakehouse_ensaio
+
+# a descrição e os tópicos são o que aparece na busca e no card do link
+gh repo edit --description "Lead Score no Databricks: medalhão, IA no SQL, Genie e Data App para priorizar os 20 leads do dia."
+gh repo edit --add-topic databricks,lakehouse,claude-code,engenharia-de-dados,genie</code></pre>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 1.3 ============ -->
+    <section class="bloco" id="s13" data-titulo="databricks bundle init" data-inicio="16" data-fim="18">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">1.3</span><span class="tempo">⏱ 16–18 min</span><span class="tipo">setup</span></div>
+        <h2>databricks bundle init.</h2>
+        <p class="bloco-goal">O esqueleto do projeto, criado pelo template oficial.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · dentro de lakehouse_ensaio</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks bundle init --profile lead_score</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Pergunta do wizard</th><th>Resposta</th><th>Por quê</th></tr></thead>
+          <tbody>
+            <tr><td>Template</td><td><code>default-python</code></td><td>Já traz <code>src/</code>, <code>resources/</code>, <code>tests/</code> e o pacote Python</td></tr>
+            <tr><td>Project name</td><td><code>lh_ensaio</code></td><td>Vira a pasta e o nome do bundle; é o mesmo nome do catálogo</td></tr>
+            <tr><td>Stub notebook</td><td>no</td><td>O código de verdade vem depois</td></tr>
+            <tr><td>Stub pipeline</td><td>no</td><td>O pipeline do Lead Score é escrito do zero</td></tr>
+            <tr><td>Stub Python package</td><td>yes</td><td>Estrutura de biblioteca e testes</td></tr>
+            <tr><td>Use serverless</td><td>yes</td><td>Sem cluster para gerenciar</td></tr>
+            <tr><td>Default catalog</td><td><code>workspace</code> (Enter)</td><td>O catálogo <code>lh_ensaio</code> ainda não existe; trocar depois é uma linha</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>cd lh_ensaio</code></pre>
+      </div>
+
+      <h3>O arquivo que o wizard escreveu</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-tag">databricks.yml · recém-gerado</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>bundle:
+  name: lh_ensaio
+  uuid: bdc71a5b-...           # gerado uma vez; nunca copie entre repositórios
+
+include:
+  - resources/*.yml            # um .yml por recurso: schemas, volumes, pipeline, app
+
+artifacts:
+  python_artifact:
+    type: whl
+    build: uv build --wheel
+
+variables:
+  catalog:
+    description: The catalog to use
+  schema:
+    description: The schema to use
+
+targets:
+  dev:
+    mode: development
+    default: true              # esquecer o -t manda para dev, nunca para prod
+    workspace:
+      host: https://SEU-WORKSPACE.cloud.databricks.com
+    variables:
+      catalog: workspace       # depois: lh_ensaio
+      schema: ${workspace.current_user.short_name}
+  prod:
+    mode: production
+    workspace:
+      host: https://SEU-WORKSPACE.cloud.databricks.com
+      root_path: /Workspace/Users/SEU-EMAIL/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: workspace       # depois: lh_ensaio
+      schema: prod
+    permissions:
+      - user_name: SEU-EMAIL
+        level: CAN_MANAGE</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Comportamento</th><th>mode: development</th><th>mode: production</th></tr></thead>
+          <tbody>
+            <tr><td>Nome dos recursos</td><td>prefixo <code>[dev seu_usuario]</code></td><td>nome limpo</td></tr>
+            <tr><td>Schemas do Unity Catalog</td><td>viram <code>dev_seu_usuario_bronze</code></td><td><code>bronze</code>, <code>silver</code>, <code>gold</code></td></tr>
+            <tr><td>Agendamentos</td><td>pausados</td><td>ativos</td></tr>
+            <tr><td>Cópias</td><td>uma por pessoa</td><td>uma só, no <code>root_path</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="nota alerta">
+        <span class="nota-k">A pegadinha que apareceu neste projeto</span>
+        <p>No target <code>dev</code>, os schemas nasceram como <code>dev_&lt;usuario&gt;_bronze</code>, e <code>presets.name_prefix: ""</code> <strong>não</strong> resolveu. A saída adotada: fazer o deploy da estrutura do Lead Score com <code>-t prod</code>, onde os nomes saem exatos.</p>
+      </div>
+
+      <h3>O ciclo, do init ao deploy</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · o ciclo de trabalho</span><button class="copy" type="button">copiar</button></div>
+        <pre><code># 1. confere a sintaxe e resolve as variáveis, sem tocar no workspace
+databricks bundle validate -t prod --profile lead_score
+# 2. constrói o wheel, sobe os arquivos e cria ou atualiza os recursos
+databricks bundle deploy -t prod --profile lead_score
+# 3. executa um recurso pela chave dele no YAML
+databricks bundle run lead_score_pipeline -t prod --profile lead_score
+# o que existe lá, sem abrir a interface
+databricks bundle summary -t prod --profile lead_score</code></pre>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“O bundle traz engenharia de software para a engenharia de dados: você declara como o projeto deve estar e o deploy calcula a diferença. Rodar duas vezes não duplica nada. Quem conhece Terraform reconhece: <code>validate</code> e <code>deploy</code> fazem o papel de <code>plan</code> e <code>apply</code>.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 1.4 ============ -->
+    <section class="bloco" id="s14" data-titulo="Python, venv e commit" data-inicio="18" data-fim="19">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">1.4</span><span class="tempo">⏱ 18–19 min</span><span class="tipo">setup</span></div>
+        <h2>Python, venv e primeiro commit.</h2>
+        <p class="bloco-goal">Ambiente reproduzível e o projeto salvo no GitHub.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · dentro de lh_ensaio</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>uv python pin 3.12
+uv venv --seed
+uv sync --dev</code></pre>
+      </div>
+
+      <div class="nota">
+        <span class="nota-k">Por que 3.12</span>
+        <p>O <code>pyproject.toml</code> do template declara <code>requires-python = "&gt;=3.12,&lt;3.13"</code>: <code>databricks-connect</code> e <code>databricks-dlt</code> ainda não publicam wheel para 3.13. O <code>--seed</code> coloca o <code>pip</code> dentro do venv.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · primeiro commit</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>git add .
+git commit -m "Adiciona projeto inicial Declarative Automation Bundle"
+git push</code></pre>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 1.5 ============ -->
+    <section class="bloco" id="s15" data-titulo="Skills oficiais" data-inicio="19" data-fim="20">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">1.5</span><span class="tempo">⏱ 19–20 min</span><span class="tipo">setup</span></div>
+        <h2>Skills oficiais do Databricks.</h2>
+        <p class="bloco-goal">O agente passa a saber Databricks com a documentação oficial no contexto.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · instalador oficial</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks aitools install</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Pergunta</th><th>Resposta</th></tr></thead>
+          <tbody>
+            <tr><td>Quais agentes</td><td>Claude Code</td></tr>
+            <tr><td>Profile</td><td><code>lead_score</code></td></tr>
+            <tr><td>Escopo</td><td>global (vale para todo projeto na máquina)</td></tr>
+            <tr><td>Grupos de skills</td><td>todos</td></tr>
+            <tr><td>Limpar instalação antiga</td><td>sim (o padrão)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cards">
+        <div class="card"><span class="tag">skill</span><h4>Sabe <em>como</em> escrever</h4><p>Pipeline declarativo, AI Functions, Genie, Databricks Apps e bundle no padrão atual, sem inventar sintaxe.</p></div>
+        <div class="card"><span class="tag">cli</span><h4>Executa pela CLI</h4><p>Lista tabelas, roda SQL e faz deploy com o mesmo perfil e as mesmas permissões que você.</p></div>
+      </div>
+
+      <p>As skills usadas neste projeto: <code>databricks-core</code>, <code>databricks-pipelines</code>, <code>databricks-apps</code> e <code>databricks-app-design</code>. O <code>AGENTS.md</code> do bundle manda o agente carregar a <code>databricks-core</code> antes de qualquer ação.</p>
+
+      <h3>SQL pelo terminal, sem abrir a interface</h3>
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · ai tools</span><button class="copy" type="button">copiar</button></div>
+        <pre><code># consulta direta: acha o warehouse sozinho
+databricks experimental aitools tools query --profile lead_score \
+  "SELECT current_catalog(), current_user()"
+
+# conhecer uma tabela: colunas, tipos, amostra, nulos e contagem
+databricks experimental aitools tools discover-schema \
+  lh_ensaio.gold.fila_do_dia --profile lead_score</code></pre>
+      </div>
+
+      <div class="nota destaque">
+        <span class="nota-k">Foi isso que destravou o catálogo</span>
+        <p><code>databricks catalogs create</code> esbarrou no Default Storage. O mesmo <code>CREATE CATALOG lh_ensaio</code> rodado com <code>aitools tools query</code> passou. É experimental (está no nome do comando): ótimo para trabalho interativo e para o agente.</p>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“A skill é conhecimento entrando no contexto do agente. A CLI autenticada é o que deixa ele agir. São duas coisas diferentes, que costumam ser confundidas.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 2.0 ============ -->
+    <section class="bloco" id="b10" data-titulo="Arquitetura" data-inicio="20" data-fim="23">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">2.0</span><span class="tempo">⏱ 20–23 min</span><span class="tipo">arquitetura</span></div>
+        <h2>Arquitetura: da fonte à decisão.</h2>
+        <p class="bloco-goal">Mostrar o caminho inteiro antes de abrir qualquer tela.</p>
+      </div>
+
+      <figure>
+        <div class="fluxo" role="img" aria-label="CSV para Volume, Bronze, Silver, Gold, Genie e App">
+          <div class="no"><b>CSV do dia</b><small>leads · empresas · oportunidades</small></div><span class="seta">→</span>
+          <div class="no"><b>Volume</b><small>bronze.landing</small></div><span class="seta">→</span>
+          <div class="no bronze"><b>Bronze</b><small>Auto Loader, como chegou</small></div><span class="seta">→</span>
+          <div class="no silver"><b>Silver</b><small>limpo, deduplicado, unido</small></div><span class="seta">→</span>
+          <div class="no gold"><b>Gold</b><small>IA + nota + fila</small></div><span class="seta">→</span>
+          <div class="no uso"><b>Genie + App</b><small>fila do dia e agente</small></div>
+        </div>
+        <figcaption>Tudo num pipeline Lakeflow serverless (<code>lead_score_pipeline</code>), governado pelo Unity Catalog, catálogo <code>lh_ensaio</code>.</figcaption>
+      </figure>
+
+      <div class="camadas">
+        <div class="camada c-bronze"><h4>Bronze</h4><p>3 streaming tables com Auto Loader. Tudo string, com <code>_arquivo</code> e <code>_ingerido_em</code>. Cada arquivo é lido uma vez.</p></div>
+        <div class="camada c-silver"><h4>Silver</h4><p>E-mail e CNPJ normalizados, DV validado, 1 lead por e-mail, junção com empresa e histórico comercial.</p></div>
+        <div class="camada c-gold"><h4>Gold</h4><p><code>ai_classify</code> e <code>ai_extract</code> só em lead novo, nota 0–100 explicável e os 20 da fila.</p></div>
+        <div class="camada c-uso"><h4>Consumo</h4><p>Data App (AppKit) com a fila e a visão do gestor, e um agente Genie que responde em português.</p></div>
+      </div>
+
+      <h3>Decisões de arquitetura</h3>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Decisão</th><th>Por quê</th></tr></thead>
+          <tbody>
+            <tr><td>D-01</td><td>CSV no Volume como porta de entrada</td><td>Simples, reproduzível, sem rede</td></tr>
+            <tr><td>D-02</td><td>Auto Loader em pipeline declarativo</td><td>Incremental e idempotente por padrão</td></tr>
+            <tr><td>D-03</td><td>AI Functions no SQL</td><td>Governado, sem endpoint, fácil de explicar</td></tr>
+            <tr><td>D-04</td><td>Motivo e próximo passo por regra</td><td>Determinístico, auditável, sem custo de LLM</td></tr>
+            <tr><td>D-05</td><td>Databricks Apps + Genie</td><td>App e agente com a mesma governança</td></tr>
+            <tr><td>D-06</td><td>Nota por regra explícita</td><td>Explicável e validável com o negócio</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“A IA entra em <strong>um ponto só</strong>: transformar texto em atributo. Todo o resto é engenharia de dados clássica e regra de negócio explícita. Isso é o que torna o resultado auditável.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 2.0 ============ -->
+    <section class="bloco" id="b20" data-titulo="Antes de entrar ao vivo">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">3.0</span><span class="tempo">pré-live</span><span class="tipo">checklist</span></div>
+        <h2>Antes de entrar ao vivo.</h2>
+        <p class="bloco-goal">Dez minutos antes: tudo aquecido, nada dependendo de sorte.</p>
+      </div>
+
+      <ul class="aceite">
+        <li>SQL Warehouse <strong>Serverless Starter Warehouse</strong> ligado (evita o cold start na frente da turma).</li>
+        <li>Pipeline <code>lead_score_pipeline</code> com a última execução <strong>concluída</strong>.</li>
+        <li>App <code>lh-ensaio</code> aberto e <strong>consentimento OAuth aceito</strong> (o agente roda com as suas permissões).</li>
+        <li><code>gold.feedback_contatos</code> vazia, para a demo do “marcar como contatado” começar do zero.</li>
+        <li>Abas abertas: este roteiro · Catalog Explorer em <code>lh_ensaio</code> · grafo do pipeline · SQL Editor · app.</li>
+        <li>Notas desligadas (<kbd>n</kbd>) se for compartilhar esta página na tela.</li>
+      </ul>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · ligar o warehouse</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks warehouses start a50e6a998ebe9440 --profile lead_score</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · zerar o feedback da demo</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>DELETE FROM lh_ensaio.gold.feedback_contatos;</code></pre>
+      </div>
+
+      <div class="nota alerta">
+        <span class="nota-k">Plano B</span>
+        <p>Se o warehouse ou o Genie engasgarem, siga com os resultados já impressos em cada bloco (estão marcados como <em>resultado esperado</em>) e volte à tela depois.</p>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 3.0 ============ -->
+    <section class="bloco" id="b30" data-titulo="Bronze: Auto Loader" data-inicio="23" data-fim="26">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">4.0</span><span class="tempo">⏱ 23–26 min</span><span class="tipo demo">demo 1</span></div>
+        <h2>Bronze: o dado como chegou.</h2>
+        <p class="bloco-goal">Ingerir sem filtrar nada. Filtrar aqui é destruir evidência.</p>
+      </div>
+
+      <p>Cada fonte é uma streaming table que lê o Volume com Auto Loader, separando os arquivos pelo padrão do nome. Tudo entra como string, com a origem anotada.</p>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">src/pipeline/bronze/leads.sql</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>CREATE OR REFRESH STREAMING TABLE leads
+AS SELECT
+  *,
+  _metadata.file_path  AS _arquivo,
+  current_timestamp()  AS _ingerido_em
+FROM STREAM read_files(
+  '/Volumes/lh_ensaio/bronze/landing/leads_*.csv',
+  format            =&gt; 'csv',
+  header            =&gt; true,
+  multiLine         =&gt; true,
+  inferColumnTypes  =&gt; false,
+  rescuedDataColumn =&gt; '_rescued_data'
+);</code></pre>
+      </div>
+
+      <h3>As pegadinhas que os dados trazem</h3>
+      <div class="cards">
+        <div class="card"><span class="tag">datas</span><h4>3 datas inválidas</h4><p><code>17/13/2026 25:61</code>, <code>sem data</code>, <code>ontem à tarde</code>.</p></div>
+        <div class="card"><span class="tag">cnpj</span><h4>Com e sem máscara</h4><p><code>06.474.687/0001-83</code> e <code>00623120000145</code>; 123 leads sem CNPJ.</p></div>
+        <div class="card"><span class="tag">duplicados</span><h4>10 e-mails repetidos</h4><p>300 linhas, 290 pessoas.</p></div>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · sanidade da bronze</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>SELECT count(*)                              AS leads,
+       count(DISTINCT _arquivo)              AS arquivos,
+       count_if(_rescued_data IS NOT NULL)   AS linhas_resgatadas
+FROM lh_ensaio.bronze.leads;
+<span class="res">-- resultado esperado: leads = 300 · arquivos = 1 · linhas_resgatadas = 0</span></code></pre>
+      </div>
+
+      <p class="rotulo">Onde olhar na interface</p>
+      <ol class="ui-lista">
+        <li><span class="ui-caminho">Jobs &amp; Pipelines → lead_score_pipeline</span>: o grafo do landing até a fila.</li>
+        <li><span class="ui-caminho">Catalog → lh_ensaio → bronze → leads → Sample data</span>: as colunas <code>_arquivo</code> e <code>_ingerido_em</code>.</li>
+      </ol>
+
+      <details class="prompt">
+        <summary>Prompt equivalente <small>claude code</small></summary>
+        <div class="code">
+          <div class="code-head"><span class="code-tag">prompt</span><button class="copy" type="button">copiar</button></div>
+          <pre><code>Crie a camada bronze de um pipeline Lakeflow Declarativo em SQL (serverless) no bundle.
+Fontes: /Volumes/lh_ensaio/bronze/landing/ com leads_*.csv, empresas_*.csv e oportunidades_*.csv.
+Uma streaming table por fonte com Auto Loader (read_files em STREAM), tudo como string
+(inferColumnTypes false), multiLine, _rescued_data, e as colunas _arquivo e _ingerido_em.
+Não filtre nem corrija nada nesta camada. Um arquivo por dataset em src/pipeline/bronze/.</code></pre>
+        </div>
+      </details>
+
+      <p class="rotulo">Critério de aceite</p>
+      <ul class="aceite feitos">
+        <li>CA-01: subir o <code>leads_DEMO.csv</code> gera exatamente 300 registros; rodar de novo gera 0.</li>
+      </ul>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“Repara que a data <code>ontem à tarde</code> entrou do jeito que veio. Na bronze a gente guarda a evidência; quem corrige é a silver.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 3.1 ============ -->
+    <section class="bloco" id="b31" data-titulo="Silver: limpar e unir" data-inicio="26" data-fim="28">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">4.1</span><span class="tempo">⏱ 26–28 min</span><span class="tipo demo">demo 1</span></div>
+        <h2>Silver: limpar, deduplicar e unir.</h2>
+        <p class="bloco-goal">Uma pessoa, um registro, com o contexto da empresa ao lado.</p>
+      </div>
+
+      <div class="camadas">
+        <div class="camada c-silver"><h4>silver.leads</h4><p>E-mail em minúsculas, CNPJ só com dígitos e DV validado, data tipada, <strong>1 linha por e-mail</strong> (a mensagem mais recente).</p></div>
+        <div class="camada c-silver"><h4>silver.empresas</h4><p>Base cadastral normalizada por CNPJ: porte, segmento, UF.</p></div>
+        <div class="camada c-silver"><h4>silver.historico_empresa</h4><p>Oportunidades por CNPJ: ganhas, abertas, produtos contratados, <code>ja_cliente</code>.</p></div>
+        <div class="camada c-silver"><h4>silver.leads_enriquecidos</h4><p>Lead + empresa + histórico. A base da gold.</p></div>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · sanidade da silver</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>SELECT count(*)                                         AS leads_unicos,
+       count(*) - count(DISTINCT email)                 AS emails_duplicados,
+       count_if(cnpj IS NOT NULL AND NOT cnpj_valido)   AS cnpj_invalidos
+FROM lh_ensaio.silver.leads;
+<span class="res">-- resultado esperado: leads_unicos = 290 · emails_duplicados = 0 · cnpj_invalidos = 3</span></code></pre>
+      </div>
+
+      <div class="nota">
+        <span class="nota-k">Expectations em vez de filtro</span>
+        <p>E-mail válido, data não nula e CNPJ válido são <em>expectations</em> em modo aviso: a violação fica registrada no pipeline, mas o lead não some.</p>
+      </div>
+
+      <details class="prompt">
+        <summary>Prompt equivalente <small>claude code</small></summary>
+        <div class="code">
+          <div class="code-head"><span class="code-tag">prompt</span><button class="copy" type="button">copiar</button></div>
+          <pre><code>Crie a camada silver como materialized views em src/pipeline/silver/:
+- silver.leads: e-mail lower/trim, CNPJ só dígitos com dígito verificador validado (cnpj_valido),
+  recebido_em tipado com try_to_timestamp, deduplicação por e-mail mantendo a mensagem mais recente.
+  Expectations em modo warn: e-mail válido, recebido_em não nulo, CNPJ válido quando informado.
+- silver.empresas: CNPJ normalizado, 1 linha por CNPJ.
+- silver.historico_empresa: oportunidades agregadas por CNPJ (ganhas, abertas, produtos, ja_cliente).
+- silver.leads_enriquecidos: lead + empresa + histórico por CNPJ.</code></pre>
+        </div>
+      </details>
+
+      <p class="rotulo">Critério de aceite</p>
+      <ul class="aceite feitos">
+        <li>CA-03: a silver tem 0 e-mails duplicados; CNPJs com e sem máscara convergem.</li>
+      </ul>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“Dez pessoas mandaram mensagem duas vezes. Sem deduplicar, elas ocupariam duas vagas na fila de 20. A silver é onde mora a regra de negócio.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 3.2 ============ -->
+    <section class="bloco" id="b32" data-titulo="Gold: IA no SQL" data-inicio="28" data-fim="32">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">4.2</span><span class="tempo">⏱ 28–32 min</span><span class="tipo demo">demo 1 · momento-chave</span></div>
+        <h2>Gold: IA no SQL.</h2>
+        <p class="bloco-goal">Transformar a mensagem livre em intenção e em colunas.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card"><span class="tag">ai_classify</span><h4>Em qual caixa esse texto cai?</h4><p>compra_imediata · avaliando · suporte · spam. Cada rótulo leva uma descrição que funciona como instrução de negócio.</p></div>
+        <div class="card"><span class="tag">ai_extract</span><h4>Que dados estão escondidos aqui?</h4><p>produto, quantidade de licenças, prazo, orçamento aprovado, cargo, concorrente citado.</p></div>
+      </div>
+
+      <p>Rode ao vivo no SQL Editor, com três mensagens de perfis bem diferentes:</p>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · ao vivo no SQL Editor</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>SELECT
+  lead_id,
+  ai_classify(
+    mensagem,
+    '{
+      "compra_imediata": "Pede preço, proposta, quantidade de licenças, prazo ou reunião comercial",
+      "avaliando":       "Quer conhecer, comparar ou ver demo, sem urgência",
+      "suporte":         "Já é cliente e relata problema ou dúvida de uso",
+      "spam":            "Sem relação com compra"
+    }',
+    map('version', '2.1')
+  ):response[0].value::string AS intencao,
+  ai_extract(
+    mensagem,
+    '{
+      "produto":            {"type": "string",  "description": "Produto Atlas citado"},
+      "qtd_licencas":       {"type": "integer", "description": "Quantidade de licenças ou usuários"},
+      "prazo":              {"type": "string",  "description": "Prazo ou data desejada"},
+      "orcamento_aprovado": {"type": "boolean", "description": "Mencionou orçamento aprovado"}
+    }',
+    map('version', '2.1')
+  ):response AS entidades
+FROM lh_ensaio.bronze.leads
+WHERE lead_id IN ('L20261117-0258', 'L20261117-0002', 'L20261117-0001');</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>lead_id</th><th>intenção</th><th>entidades extraídas (resultado esperado)</th></tr></thead>
+          <tbody>
+            <tr><td>L20261117-0001</td><td><span class="st pend">spam</span></td><td>nenhuma (“Parabéns, você foi selecionado...”)</td></tr>
+            <tr><td>L20261117-0002</td><td><span class="st pend">suporte</span></td><td>produto: Atlas Estoque (“está muito lento hoje”)</td></tr>
+            <tr><td>L20261117-0258</td><td><span class="st ok">compra_imediata</span></td><td>Atlas Gestão · <strong>200</strong> licenças · prazo: dezembro · orçamento aprovado</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>No pipeline: a IA roda uma vez por lead</h3>
+      <p><code>gold.leads_ia</code> é uma <strong>streaming table</strong> sobre a bronze. Cada lead novo passa pela IA uma única vez. Mensagem vazia ou com menos de 5 caracteres vira spam sem chamar a IA.</p>
+
+      <div class="numeros">
+        <div class="numero quente"><b>39</b><span>compra imediata</span></div>
+        <div class="numero azul"><b>117</b><span>avaliando</span></div>
+        <div class="numero"><b>60</b><span>suporte</span></div>
+        <div class="numero"><b>74</b><span>spam</span></div>
+      </div>
+
+      <details class="prompt">
+        <summary>Prompt equivalente <small>claude code</small></summary>
+        <div class="code">
+          <div class="code-head"><span class="code-tag">prompt</span><button class="copy" type="button">copiar</button></div>
+          <pre><code>Crie gold.leads_ia como STREAMING TABLE sobre STREAM(bronze.leads), para a IA rodar só em lead novo.
+Use ai_classify (version 2.1) com os rótulos compra_imediata, avaliando, suporte e spam, cada um com
+descrição de negócio, e ai_extract (version 2.1) com produto, qtd_licencas, prazo, orcamento_aprovado,
+cargo e concorrente_citado. Mensagem nula ou com menos de 5 caracteres vira spam sem chamar a IA.
+Guarde o VARIANT bruto, as colunas extraídas e ai_versao para auditoria.
+Antes de escrever o pipeline, teste as duas funções em 5 mensagens reais e confirme o formato de retorno.</code></pre>
+        </div>
+      </details>
+
+      <p class="rotulo">Critério de aceite</p>
+      <ul class="aceite feitos">
+        <li>CA-06: na mensagem das “200 licenças” vem produto = Atlas Gestão, qtd = 200, prazo = dezembro, orçamento = true.</li>
+      </ul>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“Isso é SQL. Sem endpoint, sem notebook de ML, sem infraestrutura nova. A IA roda onde o dado já está, governada pelo Unity Catalog.”</p>
+        <p>Destaque a <strong>descrição de cada rótulo</strong>: é ali que o negócio ensina o modelo o que é “compra imediata”.</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 3.3 ============ -->
+    <section class="bloco" id="b33" data-titulo="Nota e Fila do Dia" data-inicio="32" data-fim="34">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">4.3</span><span class="tempo">⏱ 32–34 min</span><span class="tipo demo">demo 1</span></div>
+        <h2>A nota e a Fila do Dia.</h2>
+        <p class="bloco-goal">Uma regra explícita que o gestor comercial consegue ler e discutir.</p>
+      </div>
+
+      <div class="formula">nota = <b>0,50</b> × intenção + <b>0,25</b> × perfil + <b>0,15</b> × sinais + <b>0,10</b> × recência</div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Componente</th><th>Fonte</th><th>Cálculo</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Intenção</strong></td><td>ai_classify</td><td>compra imediata 100 · avaliando 40 · suporte e spam 0</td></tr>
+            <tr><td><strong>Perfil</strong></td><td>empresas + histórico</td><td>grande 100 · médio 60 · pequeno 30 · desconhecido 20; +20 se já é cliente (cross-sell)</td></tr>
+            <tr><td><strong>Sinais</strong></td><td>ai_extract</td><td>+40 orçamento aprovado · +30 prazo · +30 quantidade (máx. 100)</td></tr>
+            <tr><td><strong>Recência</strong></td><td>recebido_em</td><td>100 no dia · 50 no seguinte · 25 em dois dias · 0 depois</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="nota destaque">
+        <span class="nota-k">Travas</span>
+        <p><strong>Spam</strong> → nota 0 e “Descartar”. <strong>Suporte</strong> → “Encaminhar ao suporte”, fora da fila comercial. A fila pega os 20 maiores, em rodízio de 5 por vendedor.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · topo da fila</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>SELECT posicao, vendedor, nota, nome, empresa, motivo, proximo_passo
+FROM lh_ensaio.gold.fila_do_dia
+ORDER BY posicao
+LIMIT 5;</code></pre>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Vendedor</th><th>Nota</th><th>Lead</th><th>Empresa</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Ana Lima</td><td class="num"><strong>100</strong></td><td>Roberto Almeida</td><td>Metalúrgica Bandeirantes S.A.</td></tr>
+            <tr><td>2</td><td>Bruno Costa</td><td class="num"><strong>100</strong></td><td>Rodrigo Lima</td><td>Rede Cristal S.A.</td></tr>
+            <tr><td>3</td><td>Carla Mendes</td><td class="num"><strong>100</strong></td><td>Gustavo Oliveira</td><td>Grupo Delta Ltda</td></tr>
+            <tr><td>4</td><td>Diego Rocha</td><td class="num">96</td><td>João Carvalho</td><td>Indústrias Nova Era S.A.</td></tr>
+            <tr><td>5</td><td>Ana Lima</td><td class="num">94</td><td>Felipe Ferreira</td><td>Tech Atlântico S.A.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>O motivo do 1º colocado, gerado por regra: <em>“Pediu 200 licenças do Atlas Gestão · prazo: até dezembro · orçamento aprovado · Diretor Financeiro · empresa grande · já é cliente (Atlas BI) · citou OmniERP”</em>. Próximo passo: <strong>“Ligar hoje: proposta de expansão (cross-sell)”</strong>.</p>
+
+      <p class="rotulo">Critérios de aceite</p>
+      <ul class="aceite feitos">
+        <li>CA-07: nenhum spam ou suporte na fila do dia.</li>
+        <li>CA-08: 20 leads, 5 por vendedor, ordenados por nota, todos com os 4 componentes.</li>
+      </ul>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“A IA sugere, o vendedor decide. E o vendedor sempre sabe <strong>por que</strong> o lead está ali: os quatro componentes aparecem no card.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 3.4 ============ -->
+    <section class="bloco" id="b34" data-titulo="Incremental e custo">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">4.4</span><span class="tempo">extra · se sobrar tempo</span><span class="tipo">custo</span></div>
+        <h2>Reprocessar não paga a IA de novo.</h2>
+        <p class="bloco-goal">A pergunta de custo sempre aparece. Tenha a resposta pronta.</p>
+      </div>
+
+      <p>Rodar o pipeline uma segunda vez sem arquivo novo não reprocessa nenhum lead em <code>gold.leads_ia</code>. A streaming table guarda o checkpoint e só os leads novos passam pela IA.</p>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · prova do incremental</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>SELECT count(*)                          AS leads_com_ia,
+       count(DISTINCT ia_processado_em)  AS lotes_de_ia
+FROM lh_ensaio.gold.leads_ia;
+<span class="res">-- resultado esperado após 2 execuções: leads_com_ia = 300 · lotes_de_ia = 1</span></code></pre>
+      </div>
+
+      <p class="rotulo">Critério de aceite</p>
+      <ul class="aceite feitos">
+        <li>CA-11: a segunda execução sem arquivos novos faz 0 chamadas de IA.</li>
+      </ul>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 4.0 ============ -->
+    <section class="bloco" id="b40" data-titulo="Agente Genie" data-inicio="34" data-fim="37">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">5.0</span><span class="tempo">⏱ 34–37 min</span><span class="tipo demo">demo 2</span></div>
+        <h2>O agente: perguntas em português.</h2>
+        <p class="bloco-goal">O gestor pergunta sem depender de analista, e vê o SQL que respondeu.</p>
+      </div>
+
+      <p>Genie Space <strong>“LH Ensaio · Lead Score”</strong> sobre <code>gold.leads_classificados</code>, <code>gold.fila_do_dia</code> e <code>gold.feedback_contatos</code>, com instruções em português e uma consulta SQL de exemplo para cada pergunta do roteiro.</p>
+
+      <div class="nota destaque">
+        <span class="nota-k">O detalhe que faz o agente acertar</span>
+        <p>“Hoje” <strong>não</strong> é <code>current_date()</code>: é a coluna <code>dia_ref</code>, o dia de operação dos dados (17/11). Sem essa instrução, toda pergunta sobre “hoje” responde zero.</p>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Pergunta do roteiro</th><th>Resposta esperada</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Quantos leads de compra imediata chegaram hoje?</td><td>38 (o 39º tem data inválida)</td></tr>
+            <tr><td>2</td><td>Quais leads de compra imediata ficaram <strong>fora</strong> da fila de hoje?</td><td>19 leads, ordenados por nota</td></tr>
+            <tr><td>3</td><td>Qual canal trouxe mais leads de compra imediata nesta semana?</td><td>Ranking por canal</td></tr>
+            <tr><td>4</td><td>Quais leads citaram concorrente?</td><td>Lista com o concorrente citado</td></tr>
+            <tr><td>5</td><td>Quantos leads da minha fila eu já contatei?</td><td>Por vendedor, cruzando com o feedback</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <details class="prompt">
+        <summary>Prompt equivalente <small>claude code</small></summary>
+        <div class="code">
+          <div class="code-head"><span class="code-tag">prompt</span><button class="copy" type="button">copiar</button></div>
+          <pre><code>Crie um Genie Space sobre lh_ensaio.gold.leads_classificados, gold.fila_do_dia e gold.feedback_contatos,
+usando o SQL Warehouse serverless. Instruções em português: "hoje" é a coluna dia_ref (não current_date),
+"compra imediata" é intencao = 'compra_imediata', "fora da fila" é lead_id fora de fila_do_dia.
+Adicione as 5 perguntas do roteiro como perguntas sugeridas, cada uma com um SQL de exemplo.
+Versione a definição em genie/lead_score_space.json.</code></pre>
+        </div>
+      </details>
+
+      <p class="rotulo">Critério de aceite</p>
+      <ul class="aceite">
+        <li>CA-10: o agente responde corretamente as 5 perguntas do roteiro. (Testadas 1 e 2; teste 3, 4 e 5 antes da live.)</li>
+      </ul>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“Repara no <strong>SQL gerado</strong> ao lado da resposta. Resposta de IA sem mostrar como foi calculada não serve para tomar decisão.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 4.1 ============ -->
+    <section class="bloco" id="b41" data-titulo="Data App ao vivo" data-inicio="37" data-fim="43">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">5.1</span><span class="tempo">⏱ 37–43 min</span><span class="tipo demo">demo 2 · momento-chave</span></div>
+        <h2>O Data App, no ar.</h2>
+        <p class="bloco-goal">O vendedor abre o app e sabe para quem ligar. O gestor pergunta e decide.</p>
+      </div>
+
+      <p class="rotulo">Roteiro de cliques</p>
+      <ol class="ui-lista">
+        <li><span class="ui-caminho">Visão do Gestor</span>: os 4 KPIs do funil (300 recebidos → 290 classificados → 20 na fila → contatados), leads por hora e compra imediata por canal.</li>
+        <li>Aponte o card azul: <strong>39 leads de compra imediata · 19 ficaram fora da fila de hoje</strong>.</li>
+        <li><span class="ui-caminho">Fila do Dia → Vendedor: Ana Lima</span>: 5 cards com nota, os 4 componentes, motivo, mensagem e próximo passo.</li>
+        <li>No 1º card (Roberto Almeida, nota 100), clique em <strong>Marcar como contatado</strong>: o resumo muda para 1 contatado.</li>
+        <li>Volte à Visão do Gestor: o KPI <em>Contatados</em> já mostra 1.</li>
+        <li>No card azul, clique em <strong>Perguntar ao agente</strong>: a pergunta “fora da fila” vai sozinha e volta com os 19 leads e o SQL.</li>
+        <li><span class="ui-caminho">Plataforma</span>: o caminho CSV → App e as linhas por camada, para fechar o ciclo.</li>
+      </ol>
+
+      <div class="cards">
+        <div class="card"><span class="tag">leitura</span><h4>Consultas no SQL Warehouse</h4><p>Cada gráfico é um arquivo <code>config/queries/*.sql</code> com tipos gerados para o front.</p></div>
+        <div class="card"><span class="tag">escrita</span><h4>Uma única escrita</h4><p><code>POST /api/contatado</code> faz um INSERT parametrizado em <code>gold.feedback_contatos</code>.</p></div>
+        <div class="card"><span class="tag">governança</span><h4>Permissão mínima</h4><p>O app lê o catálogo e só escreve no feedback. O agente roda com as permissões de quem usa (OBO).</p></div>
+      </div>
+
+      <details class="prompt">
+        <summary>Prompt equivalente <small>claude code</small></summary>
+        <div class="code">
+          <div class="code-head"><span class="code-tag">prompt</span><button class="copy" type="button">copiar</button></div>
+          <pre><code>Crie um Databricks App em AppKit (React/TS) com os plugins analytics e genie, no bundle.
+Telas: Visão do Gestor (KPIs do funil, leads por hora, compra imediata por canal, topo da fila, leads por UF),
+Fila do Dia (filtro por vendedor, cards com nota, 4 componentes, motivo, próximo passo e botão
+"Marcar como contatado" que grava em gold.feedback_contatos), Agente (Genie com perguntas sugeridas
+e o SQL gerado visível) e Plataforma. Siga o layout de app_referencia/referencia.png.
+Leitura só por config/queries/*.sql; a única rota custom é o POST do contato.</code></pre>
+        </div>
+      </details>
+
+      <p class="rotulo">Critério de aceite</p>
+      <ul class="aceite feitos">
+        <li>CA-09: o vendedor vê os seus 5 leads, marca um como contatado e o registro aparece em <code>feedback_contatos</code>.</li>
+      </ul>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“O vendedor não abre o SQL Editor. Ele abre isto. Todo o trabalho das camadas anteriores existe para essa tela responder uma pergunta: <strong>para quem eu ligo agora?</strong>”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 5.0 ============ -->
+    <section class="bloco" id="b50" data-titulo="Prova de valor" data-inicio="43" data-fim="47">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">6.0</span><span class="tempo">⏱ 43–47 min</span><span class="tipo">validação</span></div>
+        <h2>Prova de valor: o que já está provado e o que falta.</h2>
+        <p class="bloco-goal">Mostrar os critérios de aceite com o status real.</p>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>CA</th><th>O que valida</th><th>Resultado</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>CA-01</td><td>Ingestão exata e idempotente</td><td>300 na bronze; 2ª execução não duplica</td><td><span class="st ok">ok</span></td></tr>
+            <tr><td>CA-02</td><td>Linhas malformadas em <code>_rescued_data</code></td><td>Não há arquivo com linhas malformadas</td><td><span class="st pend">pendente</span></td></tr>
+            <tr><td>CA-03</td><td>Silver sem duplicados</td><td>290 leads, 0 e-mails repetidos</td><td><span class="st ok">ok</span></td></tr>
+            <tr><td>CA-04</td><td>Acurácia do <code>ai_classify</code> ≥ 85%</td><td>Falta o gabarito (volume <code>bronze.gabarito</code> criado, vazio)</td><td><span class="st pend">pendente</span></td></tr>
+            <tr><td>CA-06</td><td>Extração das “200 licenças”</td><td>Atlas Gestão · 200 · dezembro · orçamento true · nota 100</td><td><span class="st ok">ok</span></td></tr>
+            <tr><td>CA-07</td><td>Sem spam/suporte na fila</td><td>0 bloqueados na fila</td><td><span class="st ok">ok</span></td></tr>
+            <tr><td>CA-08</td><td>20 leads, 5 por vendedor</td><td>5 · 5 · 5 · 5</td><td><span class="st ok">ok</span></td></tr>
+            <tr><td>CA-09</td><td>Marcar como contatado</td><td>Grava e atualiza a fila</td><td><span class="st ok">ok</span></td></tr>
+            <tr><td>CA-10</td><td>Agente responde as 5 perguntas</td><td>Perguntas 1 e 2 conferidas</td><td><span class="st pend">parcial</span></td></tr>
+            <tr><td>CA-11</td><td>0 chamadas de IA no reprocesso</td><td>300 leads, 1 lote de IA</td><td><span class="st ok">ok</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="nota alerta">
+        <span class="nota-k">O backtest ainda não foi feito</span>
+        <p>A prova final é aplicar a nota a dias passados com desfecho conhecido e comparar o top 20 com os 20 primeiros por ordem de chegada. Se converter ≥ 4×, a hipótese se sustenta; se não, os pesos são recalibrados com o gestor comercial. Falta gerar ~900 leads históricos com desfecho.</p>
+      </div>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>“Hoje eu provo que o pipeline faz o que promete. O ganho de vendas só se prova com histórico. Mostrar o que <em>ainda não</em> está provado é o que dá credibilidade ao resto.”</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ 6.0 ============ -->
+    <section class="bloco" id="b60" data-titulo="Evolução e perguntas" data-inicio="47" data-fim="50">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">7.0</span><span class="tempo">⏱ 47–50 min</span><span class="tipo">fechamento</span></div>
+        <h2>Para onde isso vai.</h2>
+        <p class="bloco-goal">Fechar com o caminho de evolução e abrir para perguntas.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card"><span class="tag">fontes</span><h4>CRM e APIs direto</h4><p>Trocar o CSV por conectores (Lakeflow Connect) sem mexer da silver para frente.</p></div>
+        <div class="card"><span class="tag">texto</span><h4>ai_query para abordagem</h4><p>Resumo do lead e sugestão de abertura da ligação, gerados por LLM.</p></div>
+        <div class="card"><span class="tag">nota</span><h4>ML com o histórico</h4><p>Quando houver desfecho suficiente, um modelo calibra os pesos da regra.</p></div>
+        <div class="card"><span class="tag">ação</span><h4>Reverse ETL</h4><p>Devolver a fila e o feedback para o CRM e disparar o próximo passo.</p></div>
+      </div>
+
+      <p class="frase">Mesmo time, mesma verba. A diferença é escolher melhor os 20.</p>
+
+      <aside class="fala">
+        <span class="fala-k">Fala</span>
+        <p>Retome a pergunta da abertura: “Se só posso falar com 20, como garanto que são os 20 certos?” Resposta: unindo os dados e transformando texto em atributo, com uma regra que o negócio entende.</p>
+      </aside>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ A ============ -->
+    <section class="bloco" id="bA" data-titulo="Anexo: comandos">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">A</span><span class="tipo">anexo</span></div>
+        <h2>Anexo: todos os comandos.</h2>
+        <p class="bloco-goal">Na ordem em que o projeto foi montado. Deploy sempre com <code>-t prod</code>.</p>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · bundle</span><button class="copy" type="button">copiar</button></div>
+        <pre><code># validar e publicar (schemas, volumes, pipeline e app)
+databricks bundle validate -t prod --profile lead_score
+databricks bundle deploy   -t prod --profile lead_score
+
+# rodar o pipeline medalhão
+databricks bundle run lead_score_pipeline -t prod --profile lead_score
+
+# publicar uma nova versão do app
+databricks bundle run lh_ensaio_app -t prod --profile lead_score
+databricks apps get lh-ensaio --profile lead_score</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">terminal · dados no volume</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>databricks fs cp -r data/landing dbfs:/Volumes/lh_ensaio/bronze/landing/ --profile lead_score
+databricks fs ls dbfs:/Volumes/lh_ensaio/bronze/landing/ --profile lead_score</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · catálogo (uma vez, Default Storage)</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>CREATE CATALOG IF NOT EXISTS lh_ensaio
+COMMENT 'Lakehouse ensaio - camadas bronze/silver/gold';</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-head"><span class="code-tag">sql · permissões do service principal do app</span><button class="copy" type="button">copiar</button></div>
+        <pre><code>-- troque pelo service_principal_client_id de: databricks apps get lh-ensaio
+GRANT USE CATALOG ON CATALOG lh_ensaio TO `&lt;client-id-do-app&gt;`;
+GRANT USE SCHEMA, SELECT ON CATALOG lh_ensaio TO `&lt;client-id-do-app&gt;`;
+GRANT MODIFY ON TABLE lh_ensaio.gold.feedback_contatos TO `&lt;client-id-do-app&gt;`;</code></pre>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ B ============ -->
+    <section class="bloco" id="bB" data-titulo="Anexo: quando der erro">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">B</span><span class="tipo">anexo</span></div>
+        <h2>Anexo: quando der erro.</h2>
+        <p class="bloco-goal">Os problemas que apareceram de verdade nesta construção.</p>
+      </div>
+
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Sintoma</th><th>Causa</th><th>Solução</th></tr></thead>
+          <tbody>
+            <tr><td><code>catalogs create</code>: “Metastore storage root URL does not exist”</td><td>A conta usa Default Storage</td><td>Criar com SQL: <code>CREATE CATALOG lh_ensaio</code></td></tr>
+            <tr><td>Schemas saem como <code>dev_&lt;usuario&gt;_bronze</code></td><td><code>mode: development</code> prefixa recursos do UC</td><td>Deploy com <code>-t prod</code></td></tr>
+            <tr><td>Build do app: <code>INSUFFICIENT_PERMISSIONS</code></td><td>O service principal do app não tem <code>USE CATALOG</code></td><td>Grants do anexo A e <code>bundle run lh_ensaio_app</code></td></tr>
+            <tr><td><code>npm run dev</code>: “NODE_ENV não é reconhecido”</td><td>Script com sintaxe Unix no cmd do Windows</td><td>Rodar <code>npx tsx</code> direto com a variável no shell</td></tr>
+            <tr><td>Local: “Local OBO emulation only accepts same-origin loopback requests”</td><td>Emulação de OBO em dev</td><td>Abrir em <code>localhost</code> ou <code>APPKIT_DEV_OBO=false</code></td></tr>
+            <tr><td>O app pede login e consentimento</td><td>Escopo <code>dashboards.genie</code> (OBO do agente)</td><td>Aceitar uma vez antes da live</td></tr>
+            <tr><td>Toda pergunta sobre “hoje” responde 0</td><td>O Genie usou <code>current_date()</code></td><td>Instrução “hoje = <code>dia_ref</code>” no space</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <!-- ============ C ============ -->
+    <section class="bloco" id="bC" data-titulo="Anexo: perguntas da turma">
+      <div class="bloco-head">
+        <div class="bloco-topo"><span class="bloco-num">C</span><span class="tipo">anexo</span></div>
+        <h2>Anexo: perguntas da turma.</h2>
+        <p class="bloco-goal">Respostas curtas para as perguntas que sempre aparecem.</p>
+      </div>
+
+      <div class="cards">
+        <div class="card"><h4>Por que regra e não um modelo de ML?</h4><p>Porque ainda não há histórico com desfecho para treinar, e a regra é explicável e validável com o negócio. O ML entra quando o backtest tiver dados.</p></div>
+        <div class="card"><h4>Quanto custa a IA?</h4><p>Ela roda uma vez por lead novo (streaming), mensagens curtas não chamam a IA, e reprocessar não chama de novo.</p></div>
+        <div class="card"><h4>E se a IA errar?</h4><p>A IA sugere e o vendedor decide. As travas tiram spam e suporte da fila, e o gabarito (CA-04) mede a acurácia.</p></div>
+        <div class="card"><h4>Por que streaming table na IA e materialized view no resto?</h4><p>A streaming table processa cada linha uma vez (custo). As materialized views recalculam junções e agregações quando a fonte muda.</p></div>
+        <div class="card"><h4>Quem vê o quê no agente?</h4><p>O agente roda com as permissões de quem usa o app (on-behalf-of). O app em si só lê o catálogo e só escreve no feedback.</p></div>
+        <div class="card"><h4>Funciona com dado de verdade?</h4><p>A estrutura sim. Troca-se o CSV por conector e recalibram-se descrições dos rótulos e pesos da nota com o time comercial.</p></div>
+      </div>
+
+      <button class="feito" type="button" aria-pressed="false"><span class="box"></span>marcar como feito</button>
+    </section>
+
+    <footer class="rodape">Alerrandro › Jornada de Dados › Workshop ao vivo › Lead Score</footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const CHAVE = 'lead-score-live';
+  const ler = () => { try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; } catch { return {}; } };
+  const gravar = (s) => { try { localStorage.setItem(CHAVE, JSON.stringify(s)); } catch { /* sem armazenamento: segue sem persistir */ } };
+  const estado = Object.assign({ feitos: [], tema: null, notas: true, tempo: 0 }, ler());
+
+  const blocos = Array.from(document.querySelectorAll('section.bloco'));
+  const lista = document.getElementById('railList');
+  const links = new Map();
+
+  // ---------- trilho ----------
+  blocos.forEach((b) => {
+    const num = b.querySelector('.bloco-num')?.textContent.trim() ?? '';
+    const t = b.dataset.inicio !== undefined ? `${b.dataset.inicio}–${b.dataset.fim}′` : '';
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = `#${b.id}`;
+    a.innerHTML = `<span class="rail-num"><span>${num}</span></span><span class="rail-label"></span><span class="rail-t">${t}</span>`;
+    a.querySelector('.rail-label').textContent = b.dataset.titulo;
+    li.appendChild(a);
+    lista.appendChild(li);
+    links.set(b.id, a);
+  });
+
+  // ---------- progresso ----------
+  const fill = document.getElementById('progressFill');
+  const count = document.getElementById('progressCount');
+  function pintarProgresso() {
+    const n = estado.feitos.length;
+    fill.style.width = `${(100 * n) / blocos.length}%`;
+    count.textContent = `${n} de ${blocos.length} blocos`;
+    blocos.forEach((b) => {
+      const feito = estado.feitos.includes(b.id);
+      links.get(b.id).classList.toggle('done', feito);
+      const btn = b.querySelector('.feito');
+      if (btn) {
+        btn.setAttribute('aria-pressed', String(feito));
+        btn.lastChild.textContent = feito ? 'feito' : 'marcar como feito';
+      }
+    });
+  }
+  function alternarFeito(id) {
+    estado.feitos = estado.feitos.includes(id) ? estado.feitos.filter((x) => x !== id) : [...estado.feitos, id];
+    gravar(estado);
+    pintarProgresso();
+  }
+  blocos.forEach((b) => b.querySelector('.feito')?.addEventListener('click', () => alternarFeito(b.id)));
+
+  // ---------- bloco ativo ----------
+  let ativo = blocos[0]?.id;
+  const obs = new IntersectionObserver((entradas) => {
+    entradas.forEach((e) => {
+      if (e.isIntersecting) {
+        ativo = e.target.id;
+        links.forEach((a, id) => a.classList.toggle('active', id === ativo));
+      }
+    });
+  }, { rootMargin: '-35% 0px -60% 0px' });
+  blocos.forEach((b) => obs.observe(b));
+
+  function irPara(delta) {
+    const i = Math.max(0, blocos.findIndex((b) => b.id === ativo));
+    const alvo = blocos[Math.min(blocos.length - 1, Math.max(0, i + delta))];
+    alvo.scrollIntoView({ block: 'start' });
+  }
+
+  // ---------- tema ----------
+  const raiz = document.documentElement;
+  function aplicarTema() {
+    if (estado.tema) raiz.setAttribute('data-theme', estado.tema); else raiz.removeAttribute('data-theme');
+  }
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    const escuroAgora = estado.tema ? estado.tema === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    estado.tema = escuroAgora ? 'light' : 'dark';
+    gravar(estado);
+    aplicarTema();
+  });
+
+  // ---------- notas (fala do apresentador) ----------
+  const notasBtn = document.getElementById('notasBtn');
+  function aplicarNotas() {
+    document.body.classList.toggle('sem-notas', !estado.notas);
+    notasBtn.setAttribute('aria-pressed', String(estado.notas));
+  }
+  function alternarNotas() { estado.notas = !estado.notas; gravar(estado); aplicarNotas(); }
+  notasBtn.addEventListener('click', alternarNotas);
+
+  // ---------- cronômetro ----------
+  const LIMITE = 50 * 60;
+  const timerEl = document.getElementById('timer');
+  const timerV = document.getElementById('timerV');
+  const timerBtn = document.getElementById('timerBtn');
+  let intervalo = null;
+  const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  function pintarTempo() {
+    timerV.textContent = mmss(estado.tempo);
+    timerEl.classList.toggle('estourou', estado.tempo > LIMITE);
+    const minuto = estado.tempo / 60;
+    blocos.forEach((b) => {
+      const ini = Number(b.dataset.inicio), fim = Number(b.dataset.fim);
+      const agora = b.dataset.inicio !== undefined && estado.tempo > 0 && minuto >= ini && minuto < fim;
+      links.get(b.id).classList.toggle('agora', agora);
+    });
+  }
+  function alternarTimer() {
+    if (intervalo) {
+      clearInterval(intervalo); intervalo = null;
+      timerBtn.textContent = 'retomar'; timerBtn.setAttribute('aria-pressed', 'false');
+    } else {
+      intervalo = setInterval(() => { estado.tempo += 1; if (estado.tempo % 5 === 0) gravar(estado); pintarTempo(); }, 1000);
+      timerBtn.textContent = 'pausar'; timerBtn.setAttribute('aria-pressed', 'true');
+    }
+  }
+  timerBtn.addEventListener('click', alternarTimer);
+  document.getElementById('timerReset').addEventListener('click', () => {
+    if (intervalo) alternarTimer();
+    estado.tempo = 0; gravar(estado); pintarTempo(); timerBtn.textContent = 'iniciar';
+  });
+
+  // ---------- zerar ----------
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    estado.feitos = []; gravar(estado); pintarProgresso();
+  });
+
+  // ---------- copiar ----------
+  document.querySelectorAll('.copy').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const code = btn.closest('.code').querySelector('pre code').cloneNode(true);
+      code.querySelectorAll('.res').forEach((r) => r.remove());
+      const texto = code.textContent.replace(/\s+$/, '');
+      try {
+        await navigator.clipboard.writeText(texto);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = texto; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch { /* sem área de transferência */ }
+        ta.remove();
+      }
+      btn.textContent = 'copiado'; btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = 'copiar'; btn.classList.remove('ok'); }, 1600);
+    });
+  });
+
+  // ---------- atalhos ----------
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input, textarea, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'j' || k === 'arrowright') { e.preventDefault(); irPara(1); }
+    else if (k === 'k' || k === 'arrowleft') { e.preventDefault(); irPara(-1); }
+    else if (k === 'n') alternarNotas();
+    else if (k === 't') alternarTimer();
+    else if (k === 'f' && ativo) alternarFeito(ativo);
+  });
+
+  aplicarTema(); aplicarNotas(); pintarProgresso(); pintarTempo();
+})();
+</script>
+</body>
+</html>

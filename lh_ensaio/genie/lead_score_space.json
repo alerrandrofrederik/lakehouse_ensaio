@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "config": {
+    "sample_questions": [
+      {"id": "10000000000000000000000000000001", "question": ["Quantos leads de compra imediata chegaram hoje?"]},
+      {"id": "10000000000000000000000000000002", "question": ["Quais leads de compra imediata ficaram fora da fila de hoje?"]},
+      {"id": "10000000000000000000000000000003", "question": ["Qual canal trouxe mais leads de compra imediata nesta semana?"]},
+      {"id": "10000000000000000000000000000004", "question": ["Quais leads citaram concorrente?"]},
+      {"id": "10000000000000000000000000000005", "question": ["Quantos leads da minha fila eu já contatei?"]}
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "lh_ensaio.gold.feedback_contatos",
+        "column_configs": [
+          {"column_name": "resultado", "enable_format_assistance": true, "enable_entity_matching": true},
+          {"column_name": "vendedor", "enable_format_assistance": true, "enable_entity_matching": true}
+        ]
+      },
+      {
+        "identifier": "lh_ensaio.gold.fila_do_dia",
+        "column_configs": [
+          {"column_name": "canal", "enable_format_assistance": true, "enable_entity_matching": true},
+          {"column_name": "intencao", "enable_format_assistance": true, "enable_entity_matching": true},
+          {"column_name": "posicao", "description": ["Posição do lead na fila do dia (1 = mais prioritário)."]},
+          {"column_name": "vendedor", "enable_format_assistance": true, "enable_entity_matching": true}
+        ]
+      },
+      {
+        "identifier": "lh_ensaio.gold.leads_classificados",
+        "column_configs": [
+          {"column_name": "canal", "description": ["Canal de origem do lead."], "synonyms": ["origem", "fonte"], "enable_format_assistance": true, "enable_entity_matching": true},
+          {"column_name": "concorrente_citado", "description": ["Concorrente mencionado na mensagem, extraído pela IA."], "synonyms": ["concorrente", "sistema atual"]},
+          {"column_name": "dia_ref", "description": ["Dia de operação dos dados. 'Hoje' é sempre esta data."], "synonyms": ["hoje", "data de referência"]},
+          {"column_name": "intencao", "description": ["Intenção classificada pela IA: compra_imediata, avaliando, suporte ou spam."], "synonyms": ["intenção", "classificação"], "enable_format_assistance": true, "enable_entity_matching": true},
+          {"column_name": "nota", "description": ["Nota de prioridade de 0 a 100."], "synonyms": ["score", "prioridade"]},
+          {"column_name": "porte", "enable_format_assistance": true, "enable_entity_matching": true},
+          {"column_name": "produto", "description": ["Produto Atlas citado na mensagem."], "enable_format_assistance": true, "enable_entity_matching": true}
+        ]
+      }
+    ]
+  },
+  "instructions": {
+    "text_instructions": [
+      {
+        "id": "30000000000000000000000000000001",
+        "content": [
+          "Você responde perguntas do time comercial da Atlas Software sobre leads. Responda sempre em português.\n",
+          "'Hoje' NÃO é current_date(): é a coluna dia_ref de gold.leads_classificados (o dia de operação dos dados). Filtre com to_date(recebido_em) = dia_ref. 'Esta semana' = to_date(recebido_em) >= date_sub(dia_ref, 6).\n",
+          "'Lead quente' ou 'compra imediata' = intencao = 'compra_imediata'.\n",
+          "gold.leads_classificados tem TODOS os leads; gold.fila_do_dia tem só os 20 priorizados do dia (5 por vendedor). 'Fora da fila' = lead em leads_classificados cujo lead_id não está em fila_do_dia.\n",
+          "gold.feedback_contatos registra os leads marcados como contatados no app. 'Contatado' = existe linha em feedback_contatos para o lead_id.\n",
+          "'Minha fila': se a pessoa não disser qual vendedor é, mostre o resultado por vendedor (Ana Lima, Bruno Costa, Carla Mendes, Diego Rocha).\n",
+          "Ao listar leads, mostre nome, empresa, canal, nota e motivo, ordenando por nota decrescente."
+        ]
+      }
+    ],
+    "example_question_sqls": [
+      {
+        "id": "20000000000000000000000000000001",
+        "question": ["Quantos leads de compra imediata chegaram hoje?"],
+        "sql": [
+          "SELECT count(*) AS leads_compra_imediata\n",
+          "FROM lh_ensaio.gold.leads_classificados\n",
+          "WHERE intencao = 'compra_imediata'\n",
+          "  AND to_date(recebido_em) = dia_ref"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000002",
+        "question": ["Quais leads de compra imediata ficaram fora da fila de hoje?"],
+        "sql": [
+          "SELECT c.nome, c.empresa, c.canal, c.nota, c.motivo\n",
+          "FROM lh_ensaio.gold.leads_classificados c\n",
+          "WHERE c.intencao = 'compra_imediata'\n",
+          "  AND c.lead_id NOT IN (SELECT lead_id FROM lh_ensaio.gold.fila_do_dia)\n",
+          "ORDER BY c.nota DESC"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000003",
+        "question": ["Qual canal trouxe mais leads de compra imediata nesta semana?"],
+        "sql": [
+          "SELECT canal, count(*) AS leads_compra_imediata\n",
+          "FROM lh_ensaio.gold.leads_classificados\n",
+          "WHERE intencao = 'compra_imediata'\n",
+          "  AND to_date(recebido_em) >= date_sub(dia_ref, 6)\n",
+          "GROUP BY canal\n",
+          "ORDER BY leads_compra_imediata DESC"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000004",
+        "question": ["Quais leads citaram concorrente?"],
+        "sql": [
+          "SELECT nome, empresa, concorrente_citado, intencao, nota\n",
+          "FROM lh_ensaio.gold.leads_classificados\n",
+          "WHERE concorrente_citado IS NOT NULL\n",
+          "ORDER BY nota DESC"
+        ]
+      },
+      {
+        "id": "20000000000000000000000000000005",
+        "question": ["Quantos leads da minha fila eu já contatei?"],
+        "sql": [
+          "SELECT f.vendedor,\n",
+          "       count(*) AS leads_na_fila,\n",
+          "       count(DISTINCT fb.lead_id) AS contatados\n",
+          "FROM lh_ensaio.gold.fila_do_dia f\n",
+          "LEFT JOIN lh_ensaio.gold.feedback_contatos fb ON fb.lead_id = f.lead_id\n",
+          "GROUP BY f.vendedor\n",
+          "ORDER BY f.vendedor"
+        ]
+      }
+    ]
+  }
+}

@@ -22,3 +22,10 @@ resources:
       name: landing
       volume_type: MANAGED
       comment: Arquivos CSV brutos recebidos (landing zone)
+
+    gabarito:
+      catalog_name: lh_ensaio
+      schema_name: ${resources.schemas.bronze.name}
+      name: gabarito
+      volume_type: MANAGED
+      comment: Rótulos corretos de intenção e entidades (avaliação da IA)
